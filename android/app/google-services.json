@@ -1,34 +1,42 @@
 {
   "project_info": {
-    "project_number": "1078179292228",
-    "firebase_url": "https://instaclone-89f4c.firebaseio.com",
-    "project_id": "instaclone-89f4c",
-    "storage_bucket": "instaclone-89f4c.appspot.com"
+    "project_number": "114385327237",
+    "firebase_url": "https://fir-chat-55ce3.firebaseio.com",
+    "project_id": "fir-chat-55ce3",
+    "storage_bucket": "fir-chat-55ce3.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1078179292228:android:5bc981144b7064cdd04811",
+        "mobilesdk_app_id": "1:114385327237:android:4370991e4fddb22f08c5ec",
         "android_client_info": {
-          "package_name": "com.example.instaColne"
+          "package_name": "com.demo.instaColne"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1078179292228-ti3lp4fj4qdondpck6s57fmud3rfcn9e.apps.googleusercontent.com",
+          "client_id": "114385327237-g080hulmullgac8l2r97p946sjdj1vid.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.demo.instaColne",
+            "certificate_hash": "e4dd9d78fdf6eabad09b8273a9f8d70a3bac37fd"
+          }
+        },
+        {
+          "client_id": "114385327237-alein7f43kodq3tk3lia58v0td3rn30t.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA9Pp0eSCH3iFacIlvP3A6-D9xRpMAcf3U"
+          "current_key": "AIzaSyBI_Tvt_uYHnLavQJhTXt84SLYhQYCjLzo"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1078179292228-ti3lp4fj4qdondpck6s57fmud3rfcn9e.apps.googleusercontent.com",
+              "client_id": "114385327237-alein7f43kodq3tk3lia58v0td3rn30t.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -1,9 +1,8 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-final GoogleSignIn _googleSignIn = GoogleSignIn();
+final GoogleSignIn gSignIn = GoogleSignIn();
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,62 +10,65 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isSignedIn = false;
+  bool isSignIn = false;
 
   @override
   void initState() {
     super.initState();
-    _googleSignIn.onCurrentUserChanged.listen((gSignIn) {
-      controlSignIn(gSignIn);
-    }, onError: (error) {
-      print("just error  +$error");
+    gSignIn.onCurrentUserChanged.listen((gSignInAccount) {
+      controlSign(gSignInAccount);
+    }, onError: (gError) {
+      print("Error Message" + gError);
     });
 
-    _googleSignIn.signInSilently(suppressErrors: false).then((gSignIn) {
-      controlSignIn(gSignIn);
+    gSignIn
+        .signInSilently(
+      suppressErrors: false,
+    )
+        .then((gSignInAccount) {
+      controlSign(gSignInAccount);
     }).catchError((gError) {
-      print(gError);
+      print("Error Message" + gError);
     });
   }
 
-  controlSignIn(GoogleSignInAccount signInAccount) async {
+  controlSign(GoogleSignInAccount signInAccount) async {
     if (signInAccount != null) {
       setState(() {
-        isSignedIn = true;
+        isSignIn = true;
       });
     } else {
       setState(() {
-        isSignedIn = false;
+        isSignIn = false;
       });
     }
   }
 
-  logoutUser() {
-    _googleSignIn.signOut();
+  loginUser() {
+    gSignIn.signIn();
   }
 
-  loginUSer() {
-    _googleSignIn.signIn();
+  logoutUser() {
+    gSignIn.signOut();
   }
 
   Widget buildHomeScreen() {
     return RaisedButton.icon(
-      onPressed: logoutUser(),
-      icon: Icon(Icons.logout),
-      label: Text("Sign out "),
-    );
+        onPressed: logoutUser,
+        icon: Icon(Icons.logout),
+        label: Text("Log out"));
   }
 
-  Widget buildSignScreen() {
+  Scaffold buildLoginScreen() {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topRight,
+            begin: Alignment.centerRight,
             end: Alignment.bottomLeft,
             colors: [
               Theme.of(context).accentColor,
-              Theme.of(context).primaryColorDark
+              Theme.of(context).primaryColor
             ],
           ),
         ),
@@ -78,10 +80,10 @@ class _HomePageState extends State<HomePage> {
             Text(
               "FlutterGram",
               style: TextStyle(
-                  fontSize: 92, color: Colors.white, fontFamily: "Signatra"),
+                  fontSize: 92.0, color: Colors.white, fontFamily: "Signatra"),
             ),
             GestureDetector(
-              onTap: loginUSer,
+              onTap: loginUser,
               child: Container(
                 width: 270,
                 height: 65,
@@ -101,10 +103,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isSignedIn) {
+    if (isSignIn) {
       return buildHomeScreen();
     } else {
-      return buildSignScreen();
+      return buildLoginScreen();
     }
   }
 }
