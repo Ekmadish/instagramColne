@@ -5,99 +5,68 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-User demo;
-
 class SearchPage extends StatefulWidget {
   @override
-  _SearchPageState createState() => _SearchPageState();
+  _SearchState createState() => _SearchState();
 }
 
-class _SearchPageState extends State<SearchPage>
-    with AutomaticKeepAliveClientMixin<SearchPage> {
-  TextEditingController searchTextEditingController = TextEditingController();
-  Future<QuerySnapshot> futureSearchResult;
+class _SearchState extends State<SearchPage> {
+  Future<QuerySnapshot> searchResultsFuture;
 
-  emptyTextForm() {
-    setState(() {
-      searchTextEditingController.clear();
-    });
-  }
+  TextEditingController searchFieldController = TextEditingController();
 
-  cotrollSearching(String str) {
-    Future<QuerySnapshot> allUser = usersReference
-        .where("username", isGreaterThanOrEqualTo: str)
-        .getDocuments();
-    setState(() {
-      futureSearchResult = allUser;
-    });
-  }
-
-  AppBar searchPageHeader() {
-    return AppBar(
-      backgroundColor: Colors.black,
-      title: TextFormField(
-        controller: searchTextEditingController,
-        style: TextStyle(fontSize: 24, color: Colors.white),
-        decoration: InputDecoration(
-          hintText: "Search User",
-          hintStyle: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-          enabledBorder:
-              UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-          focusedBorder:
-              UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-          filled: true,
-          prefixIcon: Icon(
-            Icons.search,
-            size: 30,
-            color: Colors.white,
-          ),
-          suffixIcon: IconButton(
-              icon: Icon(
-                Icons.clear,
-                color: Colors.white,
-              ),
-              onPressed: emptyTextForm),
-        ),
-        onFieldSubmitted: cotrollSearching,
-      ),
-      actions: [
-        IconButton(
-            icon: Icon(
-              Icons.deck,
-              color: Colors.white,
-            ),
-            onPressed: printsomething)
-      ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.deepOrangeAccent.withOpacity(0.8),
+      appBar: buildSearchBar(),
+      body:
+          searchResultsFuture == null ? buildNoContent() : buildSearchResults(),
     );
   }
 
-  printsomething() {
-    print("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww/nsssssssswwwwww    " +
-        demo.toString());
+  buildSearchBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      title: TextFormField(
+        controller: searchFieldController,
+        decoration: InputDecoration(
+          hintText: "Search for a user",
+          filled: true,
+          prefixIcon: Icon(
+            Icons.account_box,
+            size: 28,
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(Icons.clear),
+            onPressed: () => clearSearch(),
+          ),
+        ),
+        onFieldSubmitted: handleSearch,
+      ),
+    );
   }
 
-  Container displayNoSearchResultScreen() {
-    final Orientation orientation = MediaQuery.of(context).orientation;
+  buildNoContent() {
     return Container(
       child: Center(
         child: ListView(
           shrinkWrap: true,
-          children: [
-            Icon(
-              Icons.group,
-              color: Colors.black54,
-              size: 200,
-            ),
+          children: <Widget>[
+            // SvgPicture.asset(
+            //   'assets/images/search.svg',
+            //   height: 300,
+            // ),
+            Icon(Icons.person_add_alt_1_rounded),
             Text(
-              "Search User Page",
+              "Find users",
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 48),
+                color: Colors.white,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w600,
+                fontSize: 30,
+              ),
             )
           ],
         ),
@@ -105,72 +74,76 @@ class _SearchPageState extends State<SearchPage>
     );
   }
 
-  displayUserScreen() {
-    return FutureBuilder(builder: (context, datasnapshot) {
-      if (!datasnapshot.hasData) {
-        return circularProgress();
-      }
-      List<UserResult> searchUserResult = [];
-      datasnapshot.data.documents.forEach((document) {
-        User eachUser = User.fromDocument(document);
-        UserResult userResult = UserResult(eachUser);
-        searchUserResult.add(userResult);
-      });
-      return ListView(
-        children: searchUserResult,
-      );
+  handleSearch(String value) {
+    Future<QuerySnapshot> users = usersReference
+        .where("username", isGreaterThanOrEqualTo: value)
+        .getDocuments();
+    setState(() {
+      searchResultsFuture = users;
     });
   }
 
-  bool get wantKeepAlive => true;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: searchPageHeader(),
-      body: futureSearchResult == null
-          ? displayNoSearchResultScreen()
-          : displayUserScreen(),
+  buildSearchResults() {
+    return FutureBuilder(
+      future: searchResultsFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return circularProgress();
+        }
+        List<UserResult> searchResults = [];
+        snapshot.data.documents.forEach((doc) {
+          User user = User.fromDocument(doc);
+          searchResults.add(UserResult(user: user));
+        });
+        return ListView(
+          children: searchResults,
+        );
+      },
     );
+  }
+
+  clearSearch() {
+    searchFieldController.clear();
+    setState(() {
+      searchResultsFuture = null;
+    });
   }
 }
 
 class UserResult extends StatelessWidget {
-  final User eachUser;
+  final User user;
 
-  UserResult(this.eachUser);
-
+  UserResult({this.user});
   @override
   Widget build(BuildContext context) {
-    demo = eachUser;
-    return Padding(
-      padding: EdgeInsets.all(4),
-      child: Container(
-        color: Colors.black,
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: () => print("Taped"),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.black,
-                  backgroundImage: CachedNetworkImageProvider(eachUser.url),
-                ),
-                title: Text(
-                  eachUser.profileName,
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  eachUser.username,
-                  style: TextStyle(color: Colors.black, fontSize: 35),
-                ),
+    return Container(
+      color: Colors.white10,
+      child: Column(
+        children: <Widget>[
+          GestureDetector(
+            // onTap: () => showProfile(context, profileID: user.id),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.grey,
+                backgroundImage: CachedNetworkImageProvider(user.url),
+              ),
+              title: Text(
+                user.profileName,
+                style: TextStyle(
+                    color: Colors.purple, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                user.username,
+                style: TextStyle(
+                    color: Colors.purple, fontWeight: FontWeight.bold),
               ),
             ),
-          ],
-        ),
+          ),
+          Divider(
+            height: 2.0,
+            color: Colors.white54,
+          )
+        ],
       ),
     );
   }
