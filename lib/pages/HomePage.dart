@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 import 'package:buddiesgram/models/user.dart';
 import 'package:buddiesgram/pages/CreateAccountPage.dart';
@@ -11,7 +10,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:image/image.dart';
 
 final GoogleSignIn gSignIn = GoogleSignIn();
 final usersReference = Firestore.instance.collection("users");
@@ -53,7 +51,6 @@ class _HomePageState extends State<HomePage> {
   controlSign(GoogleSignInAccount signInAccount) async {
     if (signInAccount != null) {
       await saveUserInfoToFireStore();
-      ;
       setState(() {
         isSignIn = true;
       });
