@@ -1,11 +1,17 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:buddiesgram/widgets/ProgressWidget.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as ImD;
+import 'HomePage.dart';
 
 import 'package:buddiesgram/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class UploadPage extends StatefulWidget {
   final User gCurrentUser;
@@ -16,8 +22,12 @@ class UploadPage extends StatefulWidget {
   _UploadPageState createState() => _UploadPageState();
 }
 
-class _UploadPageState extends State<UploadPage> {
+class _UploadPageState extends State<UploadPage>
+    with AutomaticKeepAliveClientMixin {
   File file;
+  bool uploading = false;
+  String postId = Uuid().v4();
+
   TextEditingController descrptionTextEditingController =
       TextEditingController();
   TextEditingController locationTextEditingController = TextEditingController();
@@ -126,6 +136,65 @@ class _UploadPageState extends State<UploadPage> {
     locationTextEditingController.text = specificAddress;
   }
 
+  compressPhoto() async {
+    final tDirectory = await getTemporaryDirectory();
+    final path = tDirectory.path;
+
+    ImD.Image mImageFile = ImD.decodeImage(file.readAsBytesSync());
+    final compressedImageFile = File("$path/img_$postId.jpg")
+      ..writeAsBytesSync(ImD.encodeJpg(mImageFile, quality: 90));
+
+    setState(() {
+      file = compressedImageFile;
+    });
+  }
+
+  Future uploadPicToDB(mImage) async {
+    StorageUploadTask mStorageUploadTask =
+        gStorageReference.child("post_$postId.jpg").putFile(mImage);
+    StorageTaskSnapshot storageTaskSnapshot =
+        await mStorageUploadTask.onComplete;
+    String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
+
+  uploadAndsave() async {
+    setState(() {
+      uploading = true;
+    });
+
+    await compressPhoto();
+    String dowmloadurl = await uploadPicToDB(file);
+    savePostInfoDB(
+        url: dowmloadurl,
+        loaction: locationTextEditingController.text,
+        descrption: descrptionTextEditingController.text);
+    locationTextEditingController.clear();
+    descrptionTextEditingController.clear();
+    setState(() {
+      file = null;
+      uploading = false;
+      postId = Uuid().v4();
+    });
+  }
+
+  savePostInfoDB({String loaction, String url, String descrption}) {
+    postsReference
+        .document(widget.gCurrentUser.id)
+        .collection("userPosts")
+        .document(postId)
+        .setData({
+      "postId": postId,
+      "ownerId": widget.gCurrentUser.id,
+      "time": timestamp,
+      "likes": {},
+      "username": widget.gCurrentUser.username,
+      "descrption": descrption,
+      "loaction": loaction,
+      "url": url
+    });
+  }
+
   displayUploadFormScreen() {
     return Scaffold(
       appBar: AppBar(
@@ -135,7 +204,7 @@ class _UploadPageState extends State<UploadPage> {
             Icons.arrow_back,
             color: Colors.white,
           ),
-          onPressed: removeImage,
+          onPressed: cleanPostInfo,
         ),
         centerTitle: true,
         title: Text(
@@ -148,7 +217,7 @@ class _UploadPageState extends State<UploadPage> {
         ),
         actions: [
           FlatButton(
-            onPressed: () => print('tapped'),
+            onPressed: uploading ? null : () => uploadAndsave(),
             child: Text(
               "Share",
               style: TextStyle(
@@ -162,6 +231,7 @@ class _UploadPageState extends State<UploadPage> {
       ),
       body: ListView(
         children: [
+          uploading ? linearProgress() : Text(""),
           Container(
             height: 230,
             width: MediaQuery.of(context).size.width * 0.8,
@@ -243,9 +313,15 @@ class _UploadPageState extends State<UploadPage> {
     );
   }
 
-  removeImage() {
+  cleanPostInfo() {
+    locationTextEditingController.clear();
+    descrptionTextEditingController.clear();
     setState(() {
       file = null;
     });
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }

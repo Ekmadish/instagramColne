@@ -10,7 +10,8 @@ class SearchPage extends StatefulWidget {
   _SearchState createState() => _SearchState();
 }
 
-class _SearchState extends State<SearchPage> {
+class _SearchState extends State<SearchPage>
+    with AutomaticKeepAliveClientMixin<SearchPage> {
   Future<QuerySnapshot> searchResultsFuture;
 
   TextEditingController searchFieldController = TextEditingController();
@@ -108,6 +109,10 @@ class _SearchState extends State<SearchPage> {
       searchResultsFuture = null;
     });
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
 
 class UserResult extends StatelessWidget {

@@ -4,6 +4,8 @@ circularProgress() {
   return Text("circular progress");
 }
 
-linearProgress() {
-  return Text("linear progress");
+Widget linearProgress() {
+  return LinearProgressIndicator(
+    backgroundColor: Colors.white,
+  );
 }
