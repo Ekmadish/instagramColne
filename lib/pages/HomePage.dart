@@ -1,4 +1,3 @@
-
 import 'package:buddiesgram/models/user.dart';
 import 'package:buddiesgram/pages/CreateAccountPage.dart';
 import 'package:buddiesgram/pages/NotificationsPage.dart';
@@ -115,7 +114,9 @@ class _HomePageState extends State<HomePage> {
         children: [
           TimeLinePage(),
           SearchPage(),
-          UploadPage(),
+          UploadPage(
+            gCurrentUser: curentUser,
+          ),
           NotificationsPage(),
           ProfilePage()
         ],
