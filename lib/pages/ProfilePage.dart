@@ -15,7 +15,8 @@ class ProfilePage extends StatefulWidget {
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage>
+    with AutomaticKeepAliveClientMixin {
   final String currentOnlineUserId = curentUser.id;
   FutureBuilder createProFileView() {
     return FutureBuilder(
@@ -60,6 +61,31 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(top: 13),
+                  child: Text(
+                    user.username,
+                    style: TextStyle(
+                        color: Colors.white, letterSpacing: 2.5, fontSize: 12),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(top: 5),
+                  child: Text(
+                    user.profileName,
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(top: 3),
+                  child: Text(
+                    user.bio,
+                    style: TextStyle(color: Colors.white54, fontSize: 17),
+                  ),
+                ),
               ],
             ),
           );
@@ -68,7 +94,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   createButton() {
     bool ownProfile = currentOnlineUserId == widget.userProFileId;
-
     if (ownProfile) {
       return createButtonAndTitle(
           title: "Edit Profile", perFormFunction: editUserProfile);
@@ -77,17 +102,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
   editUserProfile() {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              EditProfilePage(currentOnlineUserId: currentOnlineUserId),
-        ));
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            EditProfilePage(currentOnlineUserId: currentOnlineUserId),
+      ),
+    );
   }
 
-  createButtonAndTitle({String title, Function perFormFunction}) {
+  Container createButtonAndTitle({String title, Function perFormFunction}) {
     return Container(
       padding: EdgeInsets.only(top: 3),
       child: FlatButton(
+        onPressed: perFormFunction,
         child: Container(
           width: 245,
           height: 26,
@@ -144,4 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

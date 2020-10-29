@@ -14,6 +14,8 @@
 *.ipr
 *.iws
 .idea/
+/build/app/outputs/apk/release
+
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -30,6 +32,8 @@
 .pub-cache/
 .pub/
 /build/
+# /build/app/outputs/apk/release
+
 
 # Web related
 lib/generated_plugin_registrant.dart

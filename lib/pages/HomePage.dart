@@ -110,13 +110,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   onTapChangePage(int pageIndex) {
-    pageController.animateToPage(pageIndex,
-        duration: Duration(milliseconds: 400), curve: Curves.bounceInOut);
+    pageController.jumpToPage(pageIndex);
+    // pageController.animateToPage(pageIndex,
+    //     duration: Duration(milliseconds: 400), curve: Curves.easeInOutQuint);
   }
 
   Scaffold buildHomeScreen() {
     return Scaffold(
       body: PageView(
+        physics: NeverScrollableScrollPhysics(),
         children: [
           TimeLinePage(),
           SearchPage(),
@@ -126,7 +128,7 @@ class _HomePageState extends State<HomePage> {
           NotificationsPage(),
           ProfilePage(userProFileId: curentUser.id)
         ],
-        physics: NeverScrollableScrollPhysics(),
+        // physics: NeverScrollableScrollPhysics(),
         controller: pageController,
         onPageChanged: whenPagesChanges,
       ),
