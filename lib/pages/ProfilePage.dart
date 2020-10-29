@@ -116,8 +116,9 @@ class _ProfilePageState extends State<ProfilePage>
       child: FlatButton(
         onPressed: perFormFunction,
         child: Container(
+          margin: EdgeInsets.only(top: 20),
           width: 245,
-          height: 26,
+          height: 35,
           child: Text(
             title,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
