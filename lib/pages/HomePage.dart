@@ -124,7 +124,7 @@ class _HomePageState extends State<HomePage> {
             gCurrentUser: curentUser,
           ),
           NotificationsPage(),
-          ProfilePage()
+          ProfilePage(userProFileId: curentUser.id)
         ],
         physics: NeverScrollableScrollPhysics(),
         controller: pageController,
