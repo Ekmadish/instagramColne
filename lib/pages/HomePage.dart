@@ -71,10 +71,8 @@ class _HomePageState extends State<HomePage> {
     DocumentSnapshot documentSnapshot =
         await usersReference.document(gCurrentUser.id).get();
     if (!documentSnapshot.exists) {
-      //
       final username = await Navigator.push(context,
           MaterialPageRoute(builder: (context) => CreateAccountPage()));
-
       usersReference.document(gCurrentUser.id).setData({
         "id": gCurrentUser.id,
         "profileName": gCurrentUser.displayName,
