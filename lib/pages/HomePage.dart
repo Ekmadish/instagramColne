@@ -20,7 +20,7 @@ final StorageReference gStorageReference =
 
 final DateTime timestamp = DateTime.now();
 
-User curentUser;
+User currentUser;
 
 class HomePage extends StatefulWidget {
   @override
@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
       documentSnapshot = await usersReference.document(gCurrentUser.id).get();
     }
 
-    curentUser = User.fromDocument(documentSnapshot);
+    currentUser = User.fromDocument(documentSnapshot);
   }
 
   void dispose() {
@@ -121,10 +121,10 @@ class _HomePageState extends State<HomePage> {
           TimeLinePage(),
           SearchPage(),
           UploadPage(
-            gCurrentUser: curentUser,
+            gCurrentUser: currentUser,
           ),
           NotificationsPage(),
-          ProfilePage(userProFileId: curentUser.id)
+          ProfilePage(userProFileId: currentUser.id)
         ],
         // physics: NeverScrollableScrollPhysics(),
         controller: pageController,

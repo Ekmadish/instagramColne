@@ -2,8 +2,11 @@ import 'package:buddiesgram/models/user.dart';
 import 'package:buddiesgram/pages/EditProfilePage.dart';
 import 'package:buddiesgram/pages/HomePage.dart';
 import 'package:buddiesgram/widgets/HeaderWidget.dart';
+import 'package:buddiesgram/widgets/PostTileWidget.dart';
+import 'package:buddiesgram/widgets/PostWidget.dart';
 import 'package:buddiesgram/widgets/ProgressWidget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -17,7 +20,18 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with AutomaticKeepAliveClientMixin {
-  final String currentOnlineUserId = curentUser.id;
+  bool loading = false;
+  int countPost = 0;
+  List<Post> postsList = [];
+
+  String postOrianTation = 'grid';
+  @override
+  void initState() {
+    super.initState();
+    getOwnPosts();
+  }
+
+  final String currentOnlineUserId = currentUser.id;
   FutureBuilder createProFileView() {
     return FutureBuilder(
         future: usersReference.document(widget.userProFileId).get(),
@@ -168,9 +182,119 @@ class _ProfilePageState extends State<ProfilePage>
       body: ListView(
         children: [
           createProFileView(),
+          Divider(),
+          proFileImages(),
+          Divider(
+            height: 0.0,
+          ),
+          displayPost(),
         ],
       ),
     );
+  }
+
+  getOwnPosts() async {
+    setState(() {
+      loading = true;
+    });
+
+    QuerySnapshot querySnapshot = await postsReference
+        .document(widget.userProFileId)
+        .collection("userPosts")
+        .orderBy("time", descending: true)
+        .getDocuments();
+
+    setState(() {
+      loading = false;
+      countPost = querySnapshot.documents.length;
+      postsList = querySnapshot.documents
+          .map((snap) => Post.fromDocument(snap))
+          .toList();
+    });
+  }
+
+  displayPost() {
+    if (loading) {
+      return circularProgress();
+    } else if (postsList.isEmpty) {
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(3),
+              child: Icon(
+                Icons.photo_library,
+                color: Colors.grey,
+                size: 200,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 3),
+              child: Text(
+                "No Data",
+                style: TextStyle(
+                    fontSize: 40,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
+              ),
+            )
+          ],
+        ),
+      );
+    } else if (postOrianTation == 'grid') {
+      List<GridTile> gridTile = [];
+
+      postsList.forEach(
+        (eachPost) {
+          gridTile.add(
+            GridTile(
+              child: PostTile(
+                post: eachPost,
+              ),
+            ),
+          );
+        },
+      );
+      return GridView.count(
+          crossAxisCount: 3,
+          childAspectRatio: 1,
+          mainAxisSpacing: 1.5,
+          crossAxisSpacing: 1.5,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          children: gridTile);
+    } else if (postOrianTation == 'list') {}
+
+    return Column(children: postsList);
+  }
+
+  proFileImages() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+          icon: Icon(Icons.grid_on),
+          color: postOrianTation == 'grid'
+              ? Theme.of(context).primaryColor
+              : Colors.grey,
+          onPressed: setOriantation('grid'),
+        ),
+        IconButton(
+          icon: Icon(Icons.list),
+          color: postOrianTation == 'List'
+              ? Theme.of(context).primaryColor
+              : Colors.grey,
+          onPressed: setOriantation('list'),
+        ),
+      ],
+    );
+  }
+
+  setOriantation(String oriantation) {
+    setState(() {
+      this.postOrianTation = oriantation;
+    });
   }
 
   @override
