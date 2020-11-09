@@ -91,7 +91,7 @@ class _PostState extends State<Post> {
     this.likeCount,
   });
 
-  buildPostHeader() {
+  buildPostHeader() { 
     return FutureBuilder(
       future: usersReference.document(ownerId).get(),
       builder: (context, snapshot) {
@@ -315,7 +315,7 @@ class _PostState extends State<Post> {
               //   mediaUrl: mediaUrl,
               // ),
               child: Icon(
-                Icons.chat,
+                Icons.comment,
                 size: 28.0,
                 color: Colors.blue[900],
               ),
@@ -359,14 +359,16 @@ class _PostState extends State<Post> {
   @override
   Widget build(BuildContext context) {
     isLiked = (likes[currentUserId] == true);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        buildPostHeader(),
-        buildPostImage(),
-        buildPostFooter()
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          buildPostHeader(),
+          buildPostImage(),
+          buildPostFooter()
+        ],
+      ),
     );
   }
 }

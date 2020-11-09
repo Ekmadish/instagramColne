@@ -183,7 +183,8 @@ class _ProfilePageState extends State<ProfilePage>
         children: [
           createProFileView(),
           Divider(),
-          proFileImages(),
+          // proFileImages(),
+          createListAndGridOroriantation(),
           Divider(
             height: 0.0,
           ),
@@ -264,9 +265,35 @@ class _ProfilePageState extends State<ProfilePage>
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           children: gridTile);
-    } else if (postOrianTation == 'list') {}
+    } else if (postOrianTation == 'list') {
+      return Column(children: postsList);
+    }
+  }
 
-    return Column(children: postsList);
+  createListAndGridOroriantation() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        IconButton(
+          icon: Icon(
+            Icons.grid_on,
+            color: postOrianTation == 'grid'
+                ? Theme.of(context).primaryColor
+                : Colors.grey,
+          ),
+          onPressed: () => setOriantation('grid'),
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.list,
+            color: postOrianTation == 'list'
+                ? Theme.of(context).primaryColor
+                : Colors.grey,
+          ),
+          onPressed: () => setOriantation('list'),
+        ),
+      ],
+    );
   }
 
   proFileImages() {
