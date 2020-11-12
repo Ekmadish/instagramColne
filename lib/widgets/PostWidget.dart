@@ -91,7 +91,7 @@ class _PostState extends State<Post> {
     this.likeCount,
   });
 
-  buildPostHeader() { 
+  buildPostHeader() {
     return FutureBuilder(
       future: usersReference.document(ownerId).get(),
       builder: (context, snapshot) {
@@ -193,13 +193,14 @@ class _PostState extends State<Post> {
 
   handleLikePost() {
     bool _isLiked = likes[currentUserId] == true;
-
     if (_isLiked) {
       postsReference
           .document(ownerId)
           .collection('userPosts')
           .document(postId)
-          .updateData({'likes.$currentUserId': false});
+          .updateData(
+        {'likes.$currentUserId': false},
+      );
       removeLikeFromActivityFeed();
       setState(() {
         likeCount -= 1;
