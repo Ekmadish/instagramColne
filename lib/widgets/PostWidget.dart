@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:animator/animator.dart';
 import 'package:buddiesgram/models/user.dart';
+import 'package:buddiesgram/pages/CommentsPage.dart';
 import 'package:buddiesgram/pages/HomePage.dart';
 import 'package:buddiesgram/widgets/ProgressWidget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -309,12 +310,12 @@ class _PostState extends State<Post> {
             ),
             Padding(padding: EdgeInsets.only(right: 20.0)),
             GestureDetector(
-              // onTap: () => showComments(
-              //   context,
-              //   postId: postId,
-              //   ownerId: ownerId,
-              //   mediaUrl: mediaUrl,
-              // ),
+              onTap: () => showComments(
+                context,
+                postId: postId,
+                ownerId: ownerId,
+                url: url,
+              ),
               child: Icon(
                 Icons.comment,
                 size: 28.0,
@@ -374,13 +375,16 @@ class _PostState extends State<Post> {
   }
 }
 
-// showComments(BuildContext context,
-//     {String postId, String ownerId, String mediaUrl}) {
-//   Navigator.push(context, MaterialPageRoute(builder: (context) {
-//     return Comments(
-//       postId: postId,
-//       postOwnerId: ownerId,
-//       postMediaUrl: mediaUrl,
-//     );
-//   }));
-// }
+showComments(BuildContext context,
+    {String postId, String ownerId, String url}) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => CommentsPage(
+        postId: postId,
+        postOwnerId: ownerId,
+        postImage: url,
+      ),
+    ),
+  );
+}
