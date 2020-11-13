@@ -230,38 +230,38 @@ class _PostState extends State<Post> {
 
   addLikeToActivityFeed() {
     // add a notification to the postOwner's activity feed only if comment made by OTHER user (to avoid getting notification for our own like)
-    // bool isNotPostOwner = currentUserId != ownerId;
-    // if (isNotPostOwner) {
-    //   activityFeedRef
-    //       .document(ownerId)
-    //       .collection("feedItems")
-    //       .document(postId)
-    //       .setData({
-    //     "type": "like",
-    //     "username": currentUser.username,
-    //     "userId": currentUser.id,
-    //     "userProfileImg": currentUser.photoUrl,
-    //     "postId": postId,
-    //     "mediaUrl": mediaUrl,
-    //     "timestamp": timestamp,
-    //   });
-    // }
+    bool isNotPostOwner = currentUserId != ownerId;
+    if (isNotPostOwner) {
+      activityFeedRef
+          .document(ownerId)
+          .collection("feedItems")
+          .document(postId)
+          .setData({
+        "type": "like",
+        "username": currentUser.username,
+        "userId": currentUser.id,
+        "userProfileImg": currentUser.url,
+        "postId": postId,
+        "url": url,
+        "timestamp": timestamp,
+      });
+    }
   }
 
   removeLikeFromActivityFeed() {
-    // bool isNotPostOwner = currentUserId != ownerId;
-    // if (isNotPostOwner) {
-    //   activityFeedRef
-    //       .document(ownerId)
-    //       .collection("feedItems")
-    //       .document(postId)
-    //       .get()
-    //       .then((doc) {
-    //     if (doc.exists) {
-    //       doc.reference.delete();
-    //     }
-    //   });
-    // }
+    bool isNotPostOwner = currentUserId != ownerId;
+    if (isNotPostOwner) {
+      activityFeedRef
+          .document(ownerId)
+          .collection("feedItems")
+          .document(postId)
+          .get()
+          .then((doc) {
+        if (doc.exists) {
+          doc.reference.delete();
+        }
+      });
+    }
   }
 
   buildPostImage() {
@@ -304,7 +304,7 @@ class _PostState extends State<Post> {
               child: Icon(
                 isLiked ? Icons.favorite : Icons.favorite_border,
                 size: 28.0,
-                color: Colors.pink,
+                color: Colors.redAccent,
               ),
             ),
             Padding(padding: EdgeInsets.only(right: 20.0)),
