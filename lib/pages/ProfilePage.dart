@@ -9,95 +9,302 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ProfilePage extends StatefulWidget {
-  final String userProFileId;
+class Profile extends StatefulWidget {
+  final String profileId;
 
-  const ProfilePage({Key key, this.userProFileId}) : super(key: key);
+  Profile({this.profileId});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _ProfileState createState() => _ProfileState();
 }
 
-class _ProfilePageState extends State<ProfilePage>
-    with AutomaticKeepAliveClientMixin {
-  bool loading = false;
-  int countPost = 0;
-  List<Post> postsList = [];
+class _ProfileState extends State<Profile> {
+  final String currentUserId = currentUser?.id;
+  String postOrientation = "grid";
+  bool isFollowing = false;
+  bool isLoading = false;
+  int postCount = 0;
+  int followerCount = 0;
+  int followingCount = 0;
+  List<Post> posts = [];
 
-  String postOrianTation = 'grid';
   @override
   void initState() {
     super.initState();
-    getOwnPosts();
+    getProfilePosts();
+    getFollowers();
+    getFollowing();
+    checkIfFollowing();
   }
 
-  final String currentOnlineUserId = currentUser.id;
-  FutureBuilder createProFileView() {
+  checkIfFollowing() async {
+    DocumentSnapshot doc = await followersRef
+        .document(widget.profileId)
+        .collection('userFollowers')
+        .document(currentUserId)
+        .get();
+    setState(() {
+      isFollowing = doc.exists;
+    });
+  }
+
+  getFollowers() async {
+    QuerySnapshot snapshot = await followersRef
+        .document(widget.profileId)
+        .collection('userFollowers')
+        .getDocuments();
+    setState(() {
+      followerCount = snapshot.documents.length;
+    });
+  }
+
+  getFollowing() async {
+    QuerySnapshot snapshot = await followingRef
+        .document(widget.profileId)
+        .collection('userFollowing')
+        .getDocuments();
+    setState(() {
+      followingCount = snapshot.documents.length;
+    });
+  }
+
+  getProfilePosts() async {
+    setState(() {
+      isLoading = true;
+    });
+    QuerySnapshot snapshot = await postsReference
+        .document(widget.profileId)
+        .collection('userPosts')
+        .orderBy('time', descending: true)
+        .getDocuments();
+    setState(() {
+      isLoading = false;
+      postCount = snapshot.documents.length;
+      posts = snapshot.documents.map((doc) => Post.fromDocument(doc)).toList();
+    });
+  }
+
+  Column buildCountColumn(String label, int count) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          count.toString(),
+          style: TextStyle(
+              fontSize: 22.0, color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 4.0),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 15.0,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  editProfile() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                EditProfilePage(currentOnlineUserId: currentUserId)));
+  }
+
+  Container buildButton({String text, Function function}) {
+    return Container(
+      padding: EdgeInsets.only(top: 2.0),
+      child: FlatButton(
+        onPressed: function,
+        child: Container(
+          width: 200.0,
+          height: 27.0,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: isFollowing ? Colors.black : Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isFollowing ? Colors.white : Colors.blue,
+            border: Border.all(
+              color: isFollowing ? Colors.grey : Colors.blue,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+        ),
+      ),
+    );
+  }
+
+  buildProfileButton() {
+    // viewing your own profile - should show edit profile button
+    bool isProfileOwner = currentUserId == widget.profileId;
+    if (isProfileOwner) {
+      return buildButton(
+        text: "Edit Profile",
+        function: editProfile,
+      );
+    } else if (isFollowing) {
+      return buildButton(
+        text: "Unfollow",
+        function: handleUnfollowUser,
+      );
+    } else if (!isFollowing) {
+      return buildButton(
+        text: "Follow",
+        function: handleFollowUser,
+      );
+    }
+  }
+
+  handleUnfollowUser() {
+    setState(() {
+      isFollowing = false;
+    });
+    // remove follower
+    followersRef
+        .document(widget.profileId)
+        .collection('userFollowers')
+        .document(currentUserId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // remove following
+    followingRef
+        .document(currentUserId)
+        .collection('userFollowing')
+        .document(widget.profileId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // delete activity feed item for them
+    activityFeedRef
+        .document(widget.profileId)
+        .collection('feedItems')
+        .document(currentUserId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  }
+
+  handleFollowUser() {
+    setState(() {
+      isFollowing = true;
+    });
+    // Make auth user follower of THAT user (update THEIR followers collection)
+    followersRef
+        .document(widget.profileId)
+        .collection('userFollowers')
+        .document(currentUserId)
+        .setData({});
+    // Put THAT user on YOUR following collection (update your following collection)
+    followingRef
+        .document(currentUserId)
+        .collection('userFollowing')
+        .document(widget.profileId)
+        .setData({});
+    // add activity feed item for that user to notify about new follower (us)
+    activityFeedRef
+        .document(widget.profileId)
+        .collection('feedItems')
+        .document(currentUserId)
+        .setData({
+      "type": "follow",
+      "ownerId": widget.profileId,
+      "username": currentUser.username,
+      "userId": currentUserId,
+      "userProfileImg": currentUser.url,
+      "time": timestamp,
+    });
+  }
+
+  buildProfileHeader() {
     return FutureBuilder(
-        future: usersReference.document(widget.userProFileId).get(),
-        builder: (context, datasnapshot) {
-          if (!datasnapshot.hasData) {
+        future: usersReference.document(widget.profileId).get(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
             return circularProgress();
           }
-          User user = User.fromDocument(datasnapshot.data);
+          User user = User.fromDocument(snapshot.data);
           return Padding(
-            padding: EdgeInsets.all(17),
+            padding: EdgeInsets.all(16.0),
             child: Column(
-              children: [
+              children: <Widget>[
                 Row(
-                  children: [
+                  children: <Widget>[
                     CircleAvatar(
-                      radius: 45,
+                      radius: 40.0,
                       backgroundColor: Colors.grey,
                       backgroundImage: CachedNetworkImageProvider(user.url),
                     ),
                     Expanded(
+                      flex: 1,
                       child: Column(
-                        children: [
+                        children: <Widget>[
                           Row(
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              createColums("Post", 0),
-                              createColums("Followers", 0),
-                              createColums("Following", 0),
+                            children: <Widget>[
+                              buildCountColumn("posts", postCount),
+                              buildCountColumn("followers", followerCount),
+                              buildCountColumn("following", followingCount),
                             ],
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              createButton(),
+                            children: <Widget>[
+                              buildProfileButton(),
                             ],
                           ),
                         ],
                       ),
-                      flex: 1,
                     ),
                   ],
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(top: 13),
+                  padding: EdgeInsets.only(top: 12.0),
                   child: Text(
                     user.username,
                     style: TextStyle(
-                        color: Colors.white, letterSpacing: 2.5, fontSize: 12),
+                      fontSize: 16.0,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(top: 5),
+                  padding: EdgeInsets.only(top: 4.0),
                   child: Text(
                     user.profileName,
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(top: 3),
+                  padding: EdgeInsets.only(top: 2.0),
                   child: Text(
                     user.bio,
-                    style: TextStyle(color: Colors.white54, fontSize: 17),
                   ),
                 ),
               ],
@@ -106,70 +313,76 @@ class _ProfilePageState extends State<ProfilePage>
         });
   }
 
-  createButton() {
-    bool ownProfile = currentOnlineUserId == widget.userProFileId;
-    if (ownProfile) {
-      return createButtonAndTitle(
-          title: "Edit Profile", perFormFunction: editUserProfile);
+  buildProfilePosts() {
+    if (isLoading) {
+      return circularProgress();
+    } else if (posts.isEmpty) {
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(top: 40.0),
+              child: Icon(Icons.image_not_supported),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20.0),
+              child: Text(
+                "You haven't made any posts yet",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (postOrientation == "grid") {
+      List<GridTile> gridTiles = [];
+      posts.forEach((post) {
+        gridTiles.add(GridTile(child: PostTile(post: post)));
+      });
+      return GridView.count(
+        crossAxisCount: 3,
+        childAspectRatio: 1.0,
+        mainAxisSpacing: 1.5,
+        crossAxisSpacing: 1.5,
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        children: gridTiles,
+      );
+    } else if (postOrientation == "list") {
+      return Column(
+        children: posts,
+      );
     }
   }
 
-  editUserProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            EditProfilePage(currentOnlineUserId: currentOnlineUserId),
-      ),
-    );
+  setPostOrientation(String postOrientation) {
+    setState(() {
+      this.postOrientation = postOrientation;
+    });
   }
 
-  Container createButtonAndTitle({String title, Function perFormFunction}) {
-    return Container(
-      padding: EdgeInsets.only(top: 3),
-      child: FlatButton(
-        onPressed: perFormFunction,
-        child: Container(
-          margin: EdgeInsets.only(top: 20),
-          width: 245,
-          height: 35,
-          child: Text(
-            title,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            border: Border.all(
-              color: Colors.green,
-            ),
-            borderRadius: BorderRadius.circular(6),
-          ),
+  buildTogglePostOrientation() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        IconButton(
+          onPressed: () => setPostOrientation("grid"),
+          icon: Icon(Icons.grid_on),
+          color: postOrientation == 'grid'
+              ? Theme.of(context).primaryColor
+              : Colors.grey,
         ),
-      ),
-    );
-  }
-
-  Column createColums(String title, int count) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          count.toString(),
-          style: TextStyle(
-              fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 5),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
+        IconButton(
+          onPressed: () => setPostOrientation("list"),
+          icon: Icon(Icons.list),
+          color: postOrientation == 'list'
+              ? Theme.of(context).primaryColor
+              : Colors.grey,
         ),
       ],
     );
@@ -180,150 +393,16 @@ class _ProfilePageState extends State<ProfilePage>
     return Scaffold(
       appBar: header(context, title: "Profile"),
       body: ListView(
-        children: [
-          createProFileView(),
+        children: <Widget>[
+          buildProfileHeader(),
           Divider(),
-          // proFileImages(),
-          createListAndGridOroriantation(),
+          buildTogglePostOrientation(),
           Divider(
             height: 0.0,
           ),
-          displayPost(),
+          buildProfilePosts(),
         ],
       ),
     );
   }
-
-  getOwnPosts() async {
-    setState(() {
-      loading = true;
-    });
-
-    QuerySnapshot querySnapshot = await postsReference
-        .document(widget.userProFileId)
-        .collection("userPosts")
-        .orderBy("time", descending: true)
-        .getDocuments();
-
-    setState(() {
-      loading = false;
-      countPost = querySnapshot.documents.length;
-      postsList = querySnapshot.documents
-          .map((snap) => Post.fromDocument(snap))
-          .toList();
-    });
-  }
-
-  displayPost() {
-    if (loading) {
-      return circularProgress();
-    } else if (postsList.isEmpty) {
-      return Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(3),
-              child: Icon(
-                Icons.photo_library,
-                color: Colors.grey,
-                size: 200,
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 3),
-              child: Text(
-                "No Data",
-                style: TextStyle(
-                    fontSize: 40,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-            )
-          ],
-        ),
-      );
-    } else if (postOrianTation == 'grid') {
-      List<GridTile> gridTile = [];
-
-      postsList.forEach(
-        (eachPost) {
-          gridTile.add(
-            GridTile(
-              child: PostTile(
-                post: eachPost,
-              ),
-            ),
-          );
-        },
-      );
-      return GridView.count(
-          crossAxisCount: 3,
-          childAspectRatio: 1,
-          mainAxisSpacing: 1.5,
-          crossAxisSpacing: 1.5,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          children: gridTile);
-    } else if (postOrianTation == 'list') {
-      return Column(children: postsList);
-    }
-  }
-
-  createListAndGridOroriantation() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          icon: Icon(
-            Icons.grid_on,
-            color: postOrianTation == 'grid'
-                ? Theme.of(context).primaryColor
-                : Colors.grey,
-          ),
-          onPressed: () => setOriantation('grid'),
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.list,
-            color: postOrianTation == 'list'
-                ? Theme.of(context).primaryColor
-                : Colors.grey,
-          ),
-          onPressed: () => setOriantation('list'),
-        ),
-      ],
-    );
-  }
-
-  proFileImages() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          icon: Icon(Icons.grid_on),
-          color: postOrianTation == 'grid'
-              ? Theme.of(context).primaryColor
-              : Colors.grey,
-          onPressed: setOriantation('grid'),
-        ),
-        IconButton(
-          icon: Icon(Icons.list),
-          color: postOrianTation == 'List'
-              ? Theme.of(context).primaryColor
-              : Colors.grey,
-          onPressed: setOriantation('list'),
-        ),
-      ],
-    );
-  }
-
-  setOriantation(String oriantation) {
-    setState(() {
-      this.postOrianTation = oriantation;
-    });
-  }
-
-  @override
-  bool get wantKeepAlive => true;
 }

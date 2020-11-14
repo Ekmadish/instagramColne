@@ -19,6 +19,9 @@ final StorageReference gStorageReference =
     FirebaseStorage.instance.ref().child("Posts Pictures");
 final activityFeedRef = Firestore.instance.collection('feed');
 final commentsRef = Firestore.instance.collection('comments');
+final followersRef = Firestore.instance.collection('followers');
+final followingRef = Firestore.instance.collection('following');
+
 final DateTime timestamp = DateTime.now();
 User currentUser;
 
@@ -124,7 +127,7 @@ class _HomePageState extends State<HomePage> {
             gCurrentUser: currentUser,
           ),
           NotificationsPage(),
-          ProfilePage(userProFileId: currentUser.id)
+          Profile(profileId: currentUser.id)
         ],
         // physics: NeverScrollableScrollPhysics(),
         controller: pageController,
