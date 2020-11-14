@@ -17,11 +17,9 @@ final postsReference = Firestore.instance.collection("posts");
 
 final StorageReference gStorageReference =
     FirebaseStorage.instance.ref().child("Posts Pictures");
-final activityFeedRef = Firestore.instance..collection('feed');
-final commentsRef = Firestore.instance..collection('comments');
-
+final activityFeedRef = Firestore.instance.collection('feed');
+final commentsRef = Firestore.instance.collection('comments');
 final DateTime timestamp = DateTime.now();
-
 User currentUser;
 
 class HomePage extends StatefulWidget {

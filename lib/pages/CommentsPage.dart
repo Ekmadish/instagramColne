@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:timeago/timeago.dart' as tAgo;
 import 'package:buddiesgram/widgets/CImageWidget.dart';
 import 'package:buddiesgram/widgets/HeaderWidget.dart';
@@ -9,23 +10,22 @@ import 'HomePage.dart';
 class CommentsPage extends StatefulWidget {
   final String postId;
   final String postOwnerId;
-  final String postImage;
-
-  const CommentsPage({Key key, this.postId, this.postOwnerId, this.postImage})
+  final String postImageUrl;
+  const CommentsPage(
+      {Key key, this.postId, this.postOwnerId, this.postImageUrl})
       : super(key: key);
-
   @override
   CommentsPageState createState() => CommentsPageState(
-      postId: postId, postOwnerId: postOwnerId, postImage: postImage);
+      postId: postId, postOwnerId: postOwnerId, postImageUrl: postImageUrl);
 }
 
 class CommentsPageState extends State<CommentsPage> {
   final String postId;
   final String postOwnerId;
-  final String postImage;
+  final String postImageUrl;
   TextEditingController commentsTextEditingController = TextEditingController();
 
-  CommentsPageState({this.postId, this.postOwnerId, this.postImage});
+  CommentsPageState({this.postId, this.postOwnerId, this.postImageUrl});
   displayComents() {
     return StreamBuilder(
         stream: commentsRef
@@ -33,15 +33,16 @@ class CommentsPageState extends State<CommentsPage> {
             .collection('comments')
             .orderBy('time', descending: false)
             .snapshots(),
-        builder: (context, snap) {
-          if (!snap.hasData) {
+        builder: (context, datasnapshot) {
+          if (!datasnapshot.hasData) {
             return circularProgress();
           }
           List<Comment> comments = [];
-
-          snap.data.document.forEach((document) {
+          datasnapshot.data.documents.forEach((document) {
             comments.add(Comment.fromDocument(document));
           });
+
+          return ListView(children: comments);
         });
   }
 
@@ -63,7 +64,7 @@ class CommentsPageState extends State<CommentsPage> {
         'userId': currentUser.id,
         'username': currentUser.username,
         'userProFileImage': currentUser.url,
-        'url': postImage
+        'url': postImageUrl
       });
     }
     commentsTextEditingController.clear();
@@ -75,15 +76,13 @@ class CommentsPageState extends State<CommentsPage> {
       appBar: header(context, title: "Coments"),
       body: Column(
         children: [
-          Expanded(
-            child: displayComents(),
-          ),
+          Expanded(child: displayComents()),
           Divider(),
           ListTile(
             title: TextFormField(
               controller: commentsTextEditingController,
               decoration: InputDecoration(
-                labelText: "lats comment ",
+                labelText: "Comment... ",
                 labelStyle: TextStyle(
                   color: Colors.white,
                 ),
@@ -117,7 +116,7 @@ class Comment extends StatelessWidget {
   final String userName;
   final String userId;
   final String url;
-  final String comments;
+  final String comment;
   final Timestamp timestamp;
 
   const Comment(
@@ -125,16 +124,15 @@ class Comment extends StatelessWidget {
       this.userName,
       this.userId,
       this.url,
-      this.comments,
-      this.timestamp})
-      : super(key: key);
+      this.comment,
+      this.timestamp});
 
   factory Comment.fromDocument(DocumentSnapshot documentSnapshot) {
     return Comment(
       userName: documentSnapshot['username'],
       userId: documentSnapshot['userId'],
       url: documentSnapshot['url'],
-      comments: documentSnapshot['comment'],
+      comment: documentSnapshot['comment'],
       timestamp: documentSnapshot['time'],
     );
   }
@@ -144,25 +142,25 @@ class Comment extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: 6),
       child: Container(
-        color: Colors.white,
+        color: Colors.white10,
         child: Column(
           children: [
             ListTile(
               title: Text(
-                'UserName : ' + userName,
-                style: TextStyle(color: Colors.black, fontSize: 18),
+                userName + ' : ' + comment,
+                style: TextStyle(color: Colors.white, fontSize: 18),
               ),
               subtitle: Text(
-                'Data : ' +
+                'Time : ' +
                     tAgo.format(
                       timestamp.toDate(),
                     ),
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.green,
                 ),
               ),
-              trailing: CircleAvatar(
-                backgroundImage: cachedNetworkImage(url),
+              leading: CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(url),
               ),
             ),
           ],

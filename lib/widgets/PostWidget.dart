@@ -380,11 +380,13 @@ showComments(BuildContext context,
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => CommentsPage(
-        postId: postId,
-        postOwnerId: ownerId,
-        postImage: url,
-      ),
+      builder: (context) {
+        return CommentsPage(
+          postId: postId,
+          postOwnerId: ownerId,
+          postImageUrl: url,
+        );
+      },
     ),
   );
 }
