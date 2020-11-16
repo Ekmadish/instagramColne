@@ -244,7 +244,7 @@ class _PostState extends State<Post> {
         "userProfileImg": currentUser.url,
         "postId": postId,
         "url": url,
-        "timestamp": timestamp,
+        "timestamp": DateTime.now(),
       });
     }
   }

@@ -50,7 +50,7 @@ class CommentsPageState extends State<CommentsPage> {
     commentsRef.document(postId).collection('comments').add({
       'username': currentUser.username,
       'comment': commentsTextEditingController.text,
-      'time': timestamp,
+      'time': DateTime.now(),
       'url': currentUser.url,
       'userId': currentUser.id,
     });

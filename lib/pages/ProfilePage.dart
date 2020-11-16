@@ -232,7 +232,7 @@ class _ProfileState extends State<Profile> {
       "username": currentUser.username,
       "userId": currentUserId,
       "userProfileImg": currentUser.url,
-      "time": timestamp,
+      "time": DateTime.now(),
     });
   }
 
