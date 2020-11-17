@@ -4,6 +4,7 @@ import 'package:animator/animator.dart';
 import 'package:buddiesgram/models/user.dart';
 import 'package:buddiesgram/pages/CommentsPage.dart';
 import 'package:buddiesgram/pages/HomePage.dart';
+import 'package:buddiesgram/pages/ProfilePage.dart';
 import 'package:buddiesgram/widgets/ProgressWidget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -107,7 +108,13 @@ class _PostState extends State<Post> {
             backgroundColor: Colors.grey,
           ),
           title: GestureDetector(
-            // onTap: () => showProfile(context, profileId: user.id),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Profile(
+                    profileId: user.id,
+                  ),
+                )),
             child: Text(
               user.username,
               style: TextStyle(
