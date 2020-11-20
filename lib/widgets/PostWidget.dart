@@ -388,10 +388,10 @@ showComments(BuildContext context,
     context,
     MaterialPageRoute(
       builder: (context) {
-        return CommentsPage(
+        return Comments(
           postId: postId,
           postOwnerId: ownerId,
-          postImageUrl: url,
+          postMediaUrl: url,
         );
       },
     ),
